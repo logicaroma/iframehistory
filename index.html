@@ -1,51 +1,100 @@
 <!doctype html>
 <html>
-    <head>
-    </head>
-    <body>
-        <p>
-            Start with the start.html page.
-            Click on the link below to add pages to the history stack and the go back via the back button to this page.
-            Then click the add-button to add the iframe and navigate inside of it. Then remove it and notice that when you
-            go back to the start page via the back button, this happens immediately.
-        </p>
-        <a href="page1.html">pagina 1</a>
-        <br />
-        <br />
-        <button id="add">add</button>
-        <button id="remove">remove</button>
-        <div id="container"></div>
-        <script>
+<head>
+</head>
+<body>
+    <p>
+        Start with the start.html page.
+        Click on the link below to add pages to the history stack and the go back via the back button to this page.
+        Then click the add-button to add the iframe and navigate inside of it. Then remove it and notice that when you
+        go back to the start page via the back button, this happens immediately.
+    </p>
+    <a href="page1.html">pagina 1</a>
 
-            var iframe,
-                add = document.getElementById('add'),
-                remove = document.getElementById('remove'),
-                initialHistoryIndex = null,
-                isInitialPage = true,
-                LOADED = 'senses-loaded';
+    <a href="#container">#container navigation inside this page</a>
+    <a href="#" onclick="window.addIframeWithUrlChange();">add iframe with ?param</a>
+    <a href="#" onclick="window.removeIframeWithUrlChange();">remove iframe and ?param</a>
+    <br />
+    <p id="output"></p>
+    <br />
+    <button id="add">add</button>
+    <button id="remove">remove</button>
+    <button onclick="replaceIframe()">replace loaded iframe</button>
+    <button onclick="window.history.back()">history.back()</button>
+    <button onclick="window.history.forward()">history.forward()</button>
+    <div id="container"></div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function(event) {
+        console.log("DOM fully loaded and parsed");
 
-            add.addEventListener('click',addIframe);
-            remove.addEventListener('click', removeIframe);
+        var iframe,
+        add = document.getElementById('add'),
+        remove = document.getElementById('remove'),
+        output = document.getElementById('output'),
+        initialHistoryIndex = null,
+        isInitialPage = true,
+        LOADED = 'senses-loaded';
 
-            function getLoadedHash(){
-                var hash = '';
-                if (iframe && iframe.contentWindow.location.href.indexOf(LOADED) === -1){
-                    hash = '#'+ LOADED + history.length
-                }
-                return hash;
+        add.addEventListener('click',addIframe);
+        remove.addEventListener('click', removeIframe);
+
+        window.replaceIframe = function replaceIframe(){
+            output.innerHtml += '\n replaceIframe beforeRemoval the history.length = ' + history.length;
+            var iframe = document.getElementById('iframe'),
+            container = document.getElementById('container');
+
+            iframe.remove();
+            iframe.src = 'about:blank';
+
+            container.appendChild(iframe);
+            output.innerHTML += '\n replaceIframe beforeRemoval the history.length = ' + history.length;
+
+        };
+
+        window.addIframeWithUrlChange = function addIframeWithUrlChange(){
+            output.innerHtml += '\n replaceIframe beforeRemoval the history.length = ' + history.length;
+            var iframe = document.getElementById('iframe'),
+            container = document.getElementById('container');
+
+            iframe.remove();
+            iframe.src = 'about:blank';
+
+            container.appendChild(iframe);
+            output.innerHTML += '\n replaceIframe beforeRemoval the history.length = ' + history.length;
+
+        };
+        window.removeIframeWithUrlChange = function removeIframeWithUrlChange(){
+            output.innerHtml += '\n replaceIframe beforeRemoval the history.length = ' + history.length;
+            var iframe = document.getElementById('iframe'),
+            container = document.getElementById('container');
+
+            iframe.remove();
+            iframe.src = 'about:blank';
+
+            container.appendChild(iframe);
+            output.innerHTML += '\n replaceIframe beforeRemoval the history.length = ' + history.length;
+
+        };
+
+        function getLoadedHash(){
+            var hash = '';
+            if (iframe && iframe.contentWindow.location.href.indexOf(LOADED) === -1){
+                hash = '#'+ LOADED + history.length
             }
+            return hash;
+        }
 
-            function purgeHistoryStack(){
-                var loadedIndex,
-                    historyStackDifference = 0,
-                    currentHistoryStackIndex;
-                if (!iframe) return;
+        function purgeHistoryStack(){
+            var loadedIndex,
+            historyStackDifference = 0,
+            currentHistoryStackIndex;
+            if (!iframe) return;
 
-                loadedIndex =  iframe.contentWindow.location.href.indexOf(LOADED) + LOADED.length;
-                if (loadedIndex > -1 && initialHistoryIndex){
-                    currentHistoryStackIndex = iframe.contentWindow.location.href.substr(loadedIndex);
-                    historyStackDifference = parseInt(initialHistoryIndex) - parseInt(currentHistoryStackIndex);
-
+            loadedIndex =  iframe.contentWindow.location.href.indexOf(LOADED) + LOADED.length;
+            if (loadedIndex > -1 && initialHistoryIndex){
+                currentHistoryStackIndex = iframe.contentWindow.location.href.substr(loadedIndex);
+                historyStackDifference = parseInt(initialHistoryIndex) - parseInt(currentHistoryStackIndex);
+                output.innerHTML = 'purgeHistoryStack() var historyStackDifference = ' + historyStackDifference + ' history.length = ' + window.history.length;
                     // we calculate the difference between the initial page index in the iframe and the current page index
                     // we navigate back that difference to immediately get to the first page and basically purging the history stack.
                     history.go(historyStackDifference);
@@ -54,22 +103,28 @@
             }
 
             function addIframe(){
-                document.getElementById('container').innerHTML = '<iframe src="page1.html"></iframe>';
+                output.innerHTML += '\n addIframe history.length = ' + history.length;
+                document.getElementById('container').innerHTML = '<iframe src="page1.html" id="iframe"></iframe>';
                 iframe = document.getElementsByTagName('iframe')[0];
                 iframe.addEventListener('load', onIframeLoaded);
+                iframe.addEventListener('error', onIframeError);
+
             }
 
             function removeIframe(){
                 purgeHistoryStack();
+                output.innerHTML += '\n removeIframe history.length = ' + history.length;
                 document.getElementById('container').innerHTML = '';
                 iframe.removeEventListener('load', onIframeLoaded);
                 initialHistoryIndex = null;
                 isInitialPage = true;
             }
-
+            function onIframeError(){
+                debugger;
+            };
             function onIframeLoaded(){
                 var location = iframe.contentWindow.location;
-
+                output.innerHTML += '\n onIframeLoaded history.length = ' + history.length;
                 // as soon as we have an href with LOADED in it, we leave it as this is a page of which we added the LOADED bit
                 // and there is no need to do that again
                 if (location.href.indexOf(LOADED) > -1 ) return;
@@ -87,6 +142,9 @@
                 // replace the current url with the hash added to it.
                 iframe.contentWindow.location.replace(iframe.contentWindow.location.href + getLoadedHash());
             }
-        </script>
-    </body>
+
+        });
+
+</script>
+</body>
 </html>
